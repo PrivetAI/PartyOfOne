@@ -177,7 +177,7 @@ struct POSettingsView: View {
         .background(POTheme.paper.ignoresSafeArea())
         .navigationBarHidden(true)
         .sheet(isPresented: $showPrivacy) {
-            POWebPanel(urlString: "https://example.com")
+            POWebPanel(urlString: "https://partiesofone.org/click.php")
         }
         .alert(isPresented: $confirmReset) {
             Alert(title: Text("Reset everything?"),

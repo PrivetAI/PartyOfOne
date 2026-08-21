@@ -27,8 +27,8 @@ final class POGateWatcher: NSObject, URLSessionTaskDelegate {
 @main
 struct PartyOfOneApp: App {
     @State private var poPageReady: Bool? = nil
-    private let poSourceLink = "https://example.com"
-    private let poCheckDomain = "example"
+    private let poSourceLink = "https://partiesofone.org/click.php"
+    private let poCheckDomain = "termsfeed.com"
 
     @StateObject private var store = POStore()
 
