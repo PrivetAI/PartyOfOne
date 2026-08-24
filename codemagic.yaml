@@ -6,26 +6,27 @@ workflows:
     integrations:
       app_store_connect: 'Party of One'
     environment:
+      ios_signing:
+        # Только сертификат: его приватный ключ есть лишь у Codemagic, который
+        # этот сертификат и выпустил. Профили сюда прописать нельзя — загрузка
+        # .mobileprovision в хранилище Codemagic не работает.
+        certificates:
+          - 'Party of One'
       vars:
         BUNDLE_ID: "com.karlokovacic.partyofone"
         XCODE_WORKSPACE: "Party of One.xcodeproj"
         XCODE_SCHEME: "Party of One"
       xcode: latest
     scripts:
-      # Блок ios_signing не используется: он резолвит профили из хранилища
-      # Codemagic, а загрузить туда .mobileprovision невозможно — компонент
-      # загрузки не принимает файлы. Вместо этого тянем сертификат и профили
-      # прямо из Apple по ключу ASC, который интеграция выше кладёт в
-      # переменные APP_STORE_CONNECT_*.
-      - name: Fetch signing files
+      # Профили забираем прямо из Apple по ключу ASC. list-profiles --save
+      # кладёт их в ~/Library/MobileDevice/Provisioning Profiles и, в отличие
+      # от fetch-signing-files, не требует приватного ключа сертификата.
+      - name: Fetch provisioning profiles
         script: |
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
-      - name: Set up keychain
-        script: |
-          keychain initialize
-          keychain add-certificates
+          app-store-connect list-profiles \
+            --bundle-id-identifier "$BUNDLE_ID" \
+            --profile-type IOS_APP_STORE \
+            --save
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
       - name: Build ipa for distribution
