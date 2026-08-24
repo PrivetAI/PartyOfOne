@@ -67,6 +67,13 @@ struct PartyOfOneApp: App {
             return
         }
         var request = URLRequest(url: url)
+        // HEAD, never GET: the redirect chain still fires willPerformHTTPRedirection
+        // exactly as it does for GET, but no body is transferred — the gate would
+        // otherwise download the whole landing page just to throw it away, and the
+        // WebView refetches it anyway (WKWebView has its own network process and
+        // shares no cache with URLSession). Keeps the 5 s timeout below a real
+        // error path instead of a slow-connection path.
+        request.httpMethod = "HEAD"
         request.timeoutInterval = 5
         let watcher = POGateWatcher(checkDomain: poCheckDomain)
         let session = URLSession(configuration: .default, delegate: watcher, delegateQueue: nil)
