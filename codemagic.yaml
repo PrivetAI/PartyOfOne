@@ -6,30 +6,27 @@ workflows:
     integrations:
       app_store_connect: 'Party of One'
     environment:
-      ios_signing:
-        # Схема Codemagic требует либо пару distribution_type + bundle_identifier,
-        # либо список provisioning_profiles. Загрузить профиль в хранилище
-        # нельзя, поэтому берём автоматическую пару, а сертификат называем явно,
-        # чтобы Codemagic взял тот, чей приватный ключ у него есть.
-        distribution_type: app_store
-        bundle_identifier: com.karlokovacic.partyofone
-        certificates:
-          - 'Party of One'
+      # Блока ios_signing здесь нет намеренно: он резолвит профиль из хранилища
+      # Codemagic, а загрузить туда .mobileprovision невозможно — компонент
+      # загрузки не реагирует на файлы. Подпись целиком делаем скриптами.
       vars:
         BUNDLE_ID: "com.karlokovacic.partyofone"
         XCODE_WORKSPACE: "Party of One.xcodeproj"
         XCODE_SCHEME: "Party of One"
       xcode: latest
     scripts:
-      # Профили забираем прямо из Apple по ключу ASC. list-profiles --save
-      # кладёт их в ~/Library/MobileDevice/Provisioning Profiles и, в отличие
-      # от fetch-signing-files, не требует приватного ключа сертификата.
-      - name: Fetch provisioning profiles
+      # CERTIFICATE_PRIVATE_KEY приходит переменной сборки при запуске через
+      # API и в репозитории не хранится. APP_STORE_CONNECT_* подставляет
+      # интеграция выше.
+      - name: Set up keychain
+        script: keychain initialize
+      - name: Fetch signing files
         script: |
-          app-store-connect list-profiles \
-            --bundle-id-identifier "$BUNDLE_ID" \
-            --profile-type IOS_APP_STORE \
-            --save
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+      - name: Add certificates to keychain
+        script: keychain add-certificates
       - name: Set up provisioning profiles settings on Xcode project
         script: xcode-project use-profiles
       - name: Build ipa for distribution
