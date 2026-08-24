@@ -7,9 +7,12 @@ workflows:
       app_store_connect: 'Party of One'
     environment:
       ios_signing:
-        # Только сертификат: его приватный ключ есть лишь у Codemagic, который
-        # этот сертификат и выпустил. Профили сюда прописать нельзя — загрузка
-        # .mobileprovision в хранилище Codemagic не работает.
+        # Схема Codemagic требует либо пару distribution_type + bundle_identifier,
+        # либо список provisioning_profiles. Загрузить профиль в хранилище
+        # нельзя, поэтому берём автоматическую пару, а сертификат называем явно,
+        # чтобы Codemagic взял тот, чей приватный ключ у него есть.
+        distribution_type: app_store
+        bundle_identifier: com.karlokovacic.partyofone
         certificates:
           - 'Party of One'
       vars:
